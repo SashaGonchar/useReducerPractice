@@ -16,11 +16,10 @@ function reducer(state, action) {
         case "update_new_candidate":
             return {...state, newCandidate: action.payload};
         case "add_candidate":
-            if(!action.payload.trim() || state.candidates.some((candidate) => candidate.name === action.payload))
-            {
+            if (!action.payload.trim() || state.candidates.some((candidate) => candidate.name === action.payload)) {
                 return state;
             }
-            return {...state, candidates: [...state.candidates, {name:action.payload, votes:0}], newCandidate:""};
+            return {...state, candidates: [...state.candidates, {name: action.payload, votes: 0}], newCandidate: ""};
 
 
         case "dataReceived":
@@ -30,7 +29,26 @@ function reducer(state, action) {
             }
         case "dataFailed":
             return {...state, status: "error"}
+
+        case "vote_up":
+            return  incrementVote(state, action.payload);
+
+        case "vote_down":
+            return decrementVote(state, action.payload);
     }
+}
+
+
+function incrementVote(state, name){
+    return {...state, candidates: state.candidates.map((candidate) =>
+            candidate.name === name ? {...candidate, votes: candidate.votes + 1}: candidate
+        )}
+}
+
+function decrementVote(state, name){
+    return {...state, candidates: state.candidates.map((candidate) =>
+            candidate.name === name ? {...candidate, votes:Math.max(candidate.votes - 1,0) }: candidate
+        )}
 }
 
 function VoteTracker() {
@@ -66,8 +84,8 @@ function VoteTracker() {
             <ul>
                 {state.candidates.map((candidate) => (
                     <li key={candidate.id}>{candidate.name}: {candidate.votes} votes
-                        <button>+</button>
-                        <button>-</button>
+                        <button onClick={() => dispatch({type: "vote_up", payload: candidate.name})}>+</button>
+                        <button onClick={() => dispatch({type: "vote_down", payload: candidate.name})}>-</button>
                     </li>
 
                 ))}
@@ -80,7 +98,7 @@ function VoteTracker() {
                        placeholder="Candidate name"
                        onChange={(event) => dispatch({type: "update_new_candidate", payload: event.target.value})}/>
 
-                < button onClick={()=> dispatch({type:"add_candidate", payload: state.newCandidate })}>  Add< /button>
+                < button onClick={() => dispatch({type: "add_candidate", payload: state.newCandidate})}> Add< /button>
             </div>
         </>
     );
